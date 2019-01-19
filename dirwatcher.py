@@ -59,52 +59,97 @@ logger = logging.getLogger(__file__)
 # Update the last postion that you read from in the dictionary
 
 
+# def watch_directory(args):
+#     watching_files = {}
+#     # the keys are going to be the actual file names
+#     # and the values will be the line# you last searched/read._
+#     logger.info('Watching directory: {}, File Ext: {}, Poling Interval: {}, Magic Text: {}'.format(
+#                 args.path, args.ext, args.interval, args.magic))
+#     while True:
+#         try:
+#             logger.info('Inside Watch Loop')
+#             time.sleep(args.interval)
+#         except KeyboardInterrupt:
+#             break
+
+# path = args.path
+# file_type = args.ext
+# interval = args.interval
+# magic = args.magic
+
+
 def watch_directory(args):
-    watching_files = {}
+    watching_files = {'t5.txt': 1, 't4.txt': 2}
+    # watching_files = {}
     # the keys are going to be the actual file names
     # and the values will be the line# you last searched/read._
     logger.info('Watching directory: {}, File Ext: {}, Poling Interval: {}, Magic Text: {}'.format(
                 args.path, args.ext, args.interval, args.magic))
+    path = args.path
+    ext = args.ext
+    magic_word = args.magic
+
     while True:
         try:
             logger.info('Inside Watch Loop')
             time.sleep(args.interval)
+            remove_files(path, watching_files, ext)
+            add_files(path, ext, watching_files)
+            search_file(path, magic_word)
         except KeyboardInterrupt:
             break
 
-    # path = args.path
-    # file_type = args.ext
-    # interval = args.interval
-    # magic = args.magic
 
-
-def remove_files(path, watching_files):
+def remove_files(path, watching_files, ext):
     """ Search for files no longer in the directory
     & remove from watching_files """
+    files_to_delete = []
+    path_files = os.listdir(path)
     for file_name in watching_files:
-        if file_name in path:
-            watching_files.delete(file_name)
-            logger.info('Removed {} from {}'.format(file_name, watching_files))
+        if file_name in path_files:
+            continue
+        else:
+            files_to_delete.append(file_name)
+    for file in files_to_delete:
+        del watching_files[file]
+        logger.info('Removed {} from watching_files'.format(file_name))
     return watching_files
 
 
 def add_files(path, ext, watching_files):
     """ Search directory for new files & add to watching_files """
-    for fn in os.listdir(path):
-        if fn.endswith(ext):
-            watching_files.append(fn)
-            logger.info('Added {} to {}'.format(fn, watching_files))
+    for file_name in os.listdir(path):
+        if file_name.endswith(ext):
+            watching_files[file_name] = 1
+            logger.info('Added {} to {}'.format(file_name, 'watching_files'))
     return watching_files
 
 
-def find_magic(file_name, starting_line, magic_word):
-    """ ** enumerate ** """
-    # open file_name, read only at starting_line:
-    with open(file_name) as f:
-        for line in f:
-            if line > starting_line:
-                if magic_word in line:
-                    logger.info('Found {} on line number: {}'.format(magic_word, line))
+def search_file(path, magic_word):
+    print(path)
+    for file_name, starting_line in path:
+        print(file_name)
+        print('file_name.starting_line: {}'.format(file_name.starting_line))
+        with open(file_name) as f:
+            for line_number, line in enumerate(f, 1):
+                print(line_number)
+                if line_number > starting_line:
+                    if magic_word in line:
+                        print('Found one on {}'.format(line_number))
+                        logger.info('Found {} on line number: {}'.format(
+                                    magic_word, line_number))
+            file_name.starting_line = line_number
+            print('file_name.starting_line: {}'.format(file_name.starting_line))
+
+
+# def find_magic(file_name, starting_line, magic_word):
+#     """ ** enumerate ** """
+#     # open file_name, read only at starting_line:
+#     with open(file_name) as f:
+#         for line in f:
+#             if line > starting_line:
+#                 if magic_word in line:
+#                     logger.info('Found {} on line number: {}'.format(magic_word, line))
 
 
 def create_parser():

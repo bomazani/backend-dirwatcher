@@ -48,11 +48,16 @@ def remove_files(path, watching_files):
 
 def add_files(path, ext, watching_files):
     """ Search directory for new files & add to watching_files """
+    print(watching_files)
     for file_name in os.listdir(path):
+        print(file_name)
         if file_name.endswith(ext):
-            watching_files.append(file_name)
-            file_name.starting_line = 1
-            logger.info('Added {} to {}'.format(file_name, watching_files))
+            # watching_files.append(file_name)
+            # file_name.starting_line = 1
+            # watching_files.update(file_name)
+            watching_files[file_name] = 1
+            logger.info('Added {} to {}'.format(file_name, 'watching_files'))
+    print(watching_files)
     return watching_files
 
 
