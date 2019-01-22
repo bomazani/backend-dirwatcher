@@ -1,7 +1,7 @@
 #!/usr/bin/env/python
 # -*- coding: utf-8 -*-
 
-__author__ = "bomazani with help in mob coding"
+__author__ = "bomazani with help in mob coding on logging"
 
 # github, gitignore folder for *.log, *.txt, .vscode/,
 # Add README : Checkout Morgan's ReadMe.
@@ -95,7 +95,7 @@ def watch_directory(args):
             time.sleep(args.interval)
             remove_files(path, watching_files, ext)
             add_files(path, ext, watching_files)
-            search_file(path, magic_word)
+            search_file(path, watching_files, magic_word)
         except KeyboardInterrupt:
             break
 
@@ -125,23 +125,37 @@ def add_files(path, ext, watching_files):
     return watching_files
 
 
-def search_file(path, magic_word):
-    print(path)
-    for file_name, starting_line in path:
-        print(file_name)
-        print('file_name.starting_line: {}'.format(file_name.starting_line))
-        with open(file_name) as f:
-            for line_number, line in enumerate(f, 1):
-                print(line_number)
-                if line_number > starting_line:
-                    if magic_word in line:
-                        print('Found one on {}'.format(line_number))
-                        logger.info('Found {} on line number: {}'.format(
-                                    magic_word, line_number))
-            file_name.starting_line = line_number
-            print('file_name.starting_line: {}'.format(file_name.starting_line))
+def search_file(path, watching_files, magic_word):
+    print('path: {}'.format(path))
+    print('magic_word: {}'.format(magic_word))
+    path_files = os.listdir(path)
+    print('path_files: {}'.format(path_files))
+    print('watching_files: {}'.format(watching_files))
+    for file_name in watching_files:
+        print('file_name: {}'.format(file_name))
+        # print(starting_line)
+        # print('file_name.starting_line: {}'.format(file_name.starting_line))
+        # for file_name in path_files:
+        for i in range(0, len(path_files)):
+            with open(*path.path_files[i]) as f:
+                for line_number, line in enumerate(f, 1):
+                    print('{}: {}'.format(line_number, line))
+                    if line_number > file_name:
+                        if magic_word in line:
+                            print('Found one on {}'.format(line_number))
+                            logger.info('Found {} on line number: {}'.format(
+                                        magic_word, line_number))
+                file_name.starting_line = line_number
+                print('file_name.starting_line: {}'.format(
+                    file_name.starting_line))
+# ***********
+# import os
 
-
+# for filename in os.listdir('path/to/dir'):
+#     if filename.endswith('.log'):
+#         with open(os.path.join('path/to/dir', filename)) as f:
+#             content = f.read()
+# ***********
 # def find_magic(file_name, starting_line, magic_word):
 #     """ ** enumerate ** """
 #     # open file_name, read only at starting_line:

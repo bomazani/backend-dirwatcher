@@ -36,32 +36,33 @@ def watch_directory(args):
             break
 
 
-def remove_files(path, watching_files):
+def remove_files(path, watching_files, ext):
     """ Search for files no longer in the directory
     & remove from watching_files """
+    files_to_delete = []
+    path_files = os.listdir(path)
     for file_name in watching_files:
-        if file_name in path:
-            watching_files.delete(file_name)
-            logger.info('Removed {} from {}'.format(file_name, watching_files))
+        if file_name in path_files:
+            continue
+        else:
+            files_to_delete.append(file_name)
+    for file in files_to_delete:
+        del watching_files[file]
+        logger.info('Removed {} from watching_files'.format(file_name))
     return watching_files
 
 
 def add_files(path, ext, watching_files):
     """ Search directory for new files & add to watching_files """
-    print(watching_files)
     for file_name in os.listdir(path):
-        print(file_name)
         if file_name.endswith(ext):
-            # watching_files.append(file_name)
-            # file_name.starting_line = 1
-            # watching_files.update(file_name)
             watching_files[file_name] = 1
             logger.info('Added {} to {}'.format(file_name, 'watching_files'))
-    print(watching_files)
     return watching_files
 
 
-def search_file(path, magic_word):
+def search_file(path, watching_files, magic_word):
+
     for file_name, starting_line in path:
         with open(file_name) as f:
             for line_number, line in enumerate(f, 1):
