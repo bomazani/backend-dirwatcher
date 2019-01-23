@@ -13,7 +13,7 @@ import time
 import argparse
 import os
 # import sys
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 # HINT: Enumerate, for i, line in Wutever:
 
@@ -59,52 +59,32 @@ logger = logging.getLogger(__file__)
 # Update the last postion that you read from in the dictionary
 
 
-# def watch_directory(args):
-#     watching_files = {}
-#     # the keys are going to be the actual file names
-#     # and the values will be the line# you last searched/read._
-#     logger.info('Watching directory: {}, File Ext: {}, Poling Interval: {}, Magic Text: {}'.format(
-#                 args.path, args.ext, args.interval, args.magic))
-#     while True:
-#         try:
-#             logger.info('Inside Watch Loop')
-#             time.sleep(args.interval)
-#         except KeyboardInterrupt:
-#             break
-
-# path = args.path
-# file_type = args.ext
-# interval = args.interval
-# magic = args.magic
-
-
 def watch_directory(args):
     watching_files = {'t5.txt': 1, 't4.txt': 2}
     # watching_files = {}
-    # the keys are going to be the actual file names
-    # and the values will be the line# you last searched/read._
     logger.info('Watching directory: {}, File Ext: {}, Poling Interval: {}, Magic Text: {}'.format(
                 args.path, args.ext, args.interval, args.magic))
-    path = args.path
-    ext = args.ext
-    magic_word = args.magic
 
     while True:
+        time.sleep(args.interval)
         try:
-            logger.info('Inside Watch Loop')
-            time.sleep(args.interval)
-            remove_files(path, watching_files, ext)
-            add_files(path, ext, watching_files)
-            search_file(path, watching_files, magic_word)
+            remove_files(args.path, watching_files, args.ext)
+            add_files(args.path, args.ext, watching_files)
+            search_file(args.path, watching_files, args.magic)
+        except OSError as e:
+            logger.error(e)
+            logger.warn('Retrying in 3 seconds...')
+            time.sleep(3)
         except KeyboardInterrupt:
             break
+    logger.debug('Exited Main Loop')
 
 
-def remove_files(path, watching_files, ext):
+def remove_files(my_path, watching_files, ext):
     """ Search for files no longer in the directory
     & remove from watching_files """
     files_to_delete = []
-    path_files = os.listdir(path)
+    path_files = os.listdir(my_path)
     for file_name in watching_files:
         if file_name in path_files:
             continue
@@ -116,54 +96,31 @@ def remove_files(path, watching_files, ext):
     return watching_files
 
 
-def add_files(path, ext, watching_files):
+def add_files(my_path, ext, watching_files):
     """ Search directory for new files & add to watching_files """
-    for file_name in os.listdir(path):
-        if file_name.endswith(ext):
-            watching_files[file_name] = 1
+    for file_name in os.listdir(my_path):
+        if file_name.endswith(ext) and file_name not in watching_files:
+            watching_files[file_name] = 0
             logger.info('Added {} to {}'.format(file_name, 'watching_files'))
     return watching_files
 
 
-def search_file(path, watching_files, magic_word):
-    print('path: {}'.format(path))
-    print('magic_word: {}'.format(magic_word))
-    path_files = os.listdir(path)
-    print('path_files: {}'.format(path_files))
-    print('watching_files: {}'.format(watching_files))
+def search_file(directory_path, watching_files, magic_word):
+    # file_name needs to be absolute path
     for file_name in watching_files:
-        print('file_name: {}'.format(file_name))
-        # print(starting_line)
-        # print('file_name.starting_line: {}'.format(file_name.starting_line))
-        # for file_name in path_files:
-        for i in range(0, len(path_files)):
-            with open(*path.path_files[i]) as f:
-                for line_number, line in enumerate(f, 1):
-                    print('{}: {}'.format(line_number, line))
-                    if line_number > file_name:
-                        if magic_word in line:
-                            print('Found one on {}'.format(line_number))
-                            logger.info('Found {} on line number: {}'.format(
-                                        magic_word, line_number))
-                file_name.starting_line = line_number
-                print('file_name.starting_line: {}'.format(
-                    file_name.starting_line))
-# ***********
-# import os
+        abs_file = os.path.join(directory_path, file_name)
+        starting_line = watching_files[file_name]
+        watching_files[file_name] = find_magic(abs_file, starting_line, magic_word)
 
-# for filename in os.listdir('path/to/dir'):
-#     if filename.endswith('.log'):
-#         with open(os.path.join('path/to/dir', filename)) as f:
-#             content = f.read()
-# ***********
-# def find_magic(file_name, starting_line, magic_word):
-#     """ ** enumerate ** """
-#     # open file_name, read only at starting_line:
-#     with open(file_name) as f:
-#         for line in f:
-#             if line > starting_line:
-#                 if magic_word in line:
-#                     logger.info('Found {} on line number: {}'.format(magic_word, line))
+
+def find_magic(file_name, starting_line, magic_word):
+    """ Jumps to starting line in file and searches for magic_word """
+    with open(file_name) as f:
+        line_num = 0
+        for line_num, line in enumerate(f, 1):
+            if line_num > starting_line and magic_word in line:
+                logger.info('File: {} Found {} on line number: {}'.format(os.path.basename(file_name), magic_word, line_num))
+    return line_num
 
 
 def create_parser():
@@ -179,9 +136,8 @@ def create_parser():
 
 
 def main():
-    logging.basicConfig(filename='test.log',
-                        format='%(asctime)s.%(msecs)03d %(name)-12s'
-                        '%(levelname)-8s [%(threadName)-12s] %(message)s',
+    logging.basicConfig(format='%(asctime)s.%(msecs)03d %(name)-12s '
+                        '%(levelname)-8s %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
     logger.setLevel(logging.DEBUG)
     app_start_time = datetime.datetime.now()
